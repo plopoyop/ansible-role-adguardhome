@@ -1,0 +1,26 @@
+---
+- name: Converge
+  hosts: all
+  gather_facts: true
+  vars:
+    adguardhome_system_user: "adguardu"
+    adguardhome_system_group: "adguardg"
+    adguardhome_web_address: "0.0.0.0:3000"
+    adguardhome_users:
+      - name: "admin"
+        # bcrypt hash of "molecule-test"
+        password: "$2y$10$ztLkK44LuesdPA2RWJ9vhOcsIoaOkUk1UZ1OT6sUP2ivv5uHncZUm"
+    adguardhome_config:
+      dns:
+        # No network access needed by the tests.
+        upstream_dns:
+          - "127.0.0.1:5353"
+      filtering:
+        rewrites:
+          - domain: "molecule.test"
+            answer: "192.0.2.10"
+            enabled: true
+  tasks:
+    - name: "Import role"
+      ansible.builtin.import_role:
+        name: "plopoyop.adguardhome"

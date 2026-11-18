@@ -1,0 +1,70 @@
+---
+- name: Verify
+  hosts: all
+  vars_files:
+    - "../../defaults/main.yml"
+  tasks:
+    - name: "Check user has been created"
+      ansible.builtin.user:
+        name: "adguardu"
+        group: "adguardg"
+        create_home: false
+        system: true
+      check_mode: true
+      register: "adguardhome_user_check"
+
+    - name: "Verify AdGuard Home service is running"
+      ansible.builtin.systemd_service:
+        name: "adguardhome"
+        state: "started"
+        enabled: true
+      check_mode: true
+      register: "adguardhome_service_check"
+
+    - name: "Get installed version"
+      ansible.builtin.command: "/opt/adguardhome/bin/AdGuardHome --version"
+      changed_when: false
+      register: "adguardhome_version_check"
+
+    - name: "Stat configuration file"
+      ansible.builtin.stat:
+        path: "/opt/adguardhome/etc/AdGuardHome.yaml"
+      register: "st_config"
+
+    - name: "Wait for the DNS server"
+      ansible.builtin.wait_for:
+        port: 53
+        timeout: 30
+
+    - name: "Resolve the rewrite through AdGuard Home"
+      ansible.builtin.command: "dig +short +time=2 +tries=3 @127.0.0.1 molecule.test A"
+      changed_when: false
+      register: "adguardhome_dig"
+
+    - name: "Call the API with the configured account"
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:3000/control/status"
+        user: "admin"
+        password: "molecule-test"
+        force_basic_auth: true
+        return_content: true
+      register: "adguardhome_status"
+
+    - name: "Call the API without credentials"
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:3000/control/status"
+        status_code: [401, 403]
+
+    - name: "Assert conditions"
+      ansible.builtin.assert:
+        that:
+          - not adguardhome_user_check.changed
+          - not adguardhome_service_check.changed
+          - "('v' ~ adguardhome_version) in adguardhome_version_check.stdout"
+          - st_config.stat.mode == "0600"
+          - st_config.stat.pw_name == "adguardu"
+          - adguardhome_dig.stdout | trim == "192.0.2.10"
+          - adguardhome_status.json.running
+          - adguardhome_status.json.dns_port == 53
+        success_msg: "All assertions passed!"
+        fail_msg: "Some assertions failed!"

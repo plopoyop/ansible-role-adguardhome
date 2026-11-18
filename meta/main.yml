@@ -1,0 +1,30 @@
+---
+galaxy_info:
+  namespace: plopoyop
+  role_name: adguardhome
+  description: Install & configure AdGuard Home DNS server
+  author: Clément Hubert
+
+  issue_tracker_url: "https://github.com/plopoyop/ansible-role-adguardhome/issues"
+
+  license: "MPL-2.0"
+
+  min_ansible_version: "2.19"
+
+  platforms:
+    - name: "Debian"
+      versions:
+        - "trixie"
+        - "bookworm"
+    - name: "Ubuntu"
+      versions:
+        - "noble"
+
+  galaxy_tags:
+    - adguardhome
+    - adguard
+    - dns
+    - adblock
+    - homelab
+
+dependencies: []

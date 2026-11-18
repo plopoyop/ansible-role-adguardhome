@@ -1,0 +1,76 @@
+---
+- name: "Check architecture is supported"
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['architecture'] in adguardhome_arch_map
+    fail_msg: "Unsupported architecture {{ ansible_facts['architecture'] }}"
+    quiet: true
+
+- name: "Check web accounts use bcrypt hashes"
+  ansible.builtin.assert:
+    that:
+      - item.name is defined
+      - item.password is defined
+      - item.password is match('^\$2[aby]\$')
+    fail_msg: "adguardhome_users entries need a name and a bcrypt password hash"
+    quiet: true
+  loop: "{{ adguardhome_users }}"
+  loop_control:
+    label: "{{ item.name | default('?') }}"
+  no_log: true
+
+- name: "Refuse an unauthenticated web UI outside localhost"
+  ansible.builtin.assert:
+    that:
+      - adguardhome_users | length > 0
+        or adguardhome_web_address is match('^(127\.0\.0\.1|localhost|\[::1\]):')
+    fail_msg: >-
+      adguardhome_users is empty while the web UI listens on
+      {{ adguardhome_web_address }}: define an account or bind it to localhost
+    quiet: true
+
+# AdGuard Home rewrites its configuration on every start and assigns a new
+# id/uid to entries without one: the role would then see a difference and
+# restart the service on every run.
+- name: "Check filters and persistent clients have stable identifiers"
+  ansible.builtin.assert:
+    that:
+      - (adguardhome_config_final.filters | default([])) | rejectattr('id', 'defined') | list | length == 0
+      - (adguardhome_config_final.whitelist_filters | default([])) | rejectattr('id', 'defined') | list | length == 0
+      - (adguardhome_config_final.clients.persistent | default([])) | rejectattr('uid', 'defined') | list | length == 0
+    fail_msg: "Every filter / whitelist filter needs an 'id' and every persistent client a 'uid'"
+    quiet: true
+
+- name: "Create AdGuard Home group"
+  ansible.builtin.group:
+    name: "{{ adguardhome_system_group }}"
+    system: true
+
+- name: "Create AdGuard Home user"
+  ansible.builtin.user:
+    name: "{{ adguardhome_system_user }}"
+    group: "{{ adguardhome_system_group }}"
+    create_home: false
+    home: "{{ adguardhome_install_path }}"
+    shell: "/usr/sbin/nologin"
+    system: true
+
+- name: "Check if AdGuard Home is already installed"
+  ansible.builtin.stat:
+    path: "{{ adguardhome_executable_path }}"
+  register: "adguardhome_exec"
+
+- name: "Get installed version"
+  when: adguardhome_exec.stat.exists
+  block:
+    - name: "Get version"
+      ansible.builtin.command: "{{ adguardhome_executable_path }} --version"
+      failed_when: false
+      changed_when: false
+      check_mode: false
+      register: "adguardhome_version_output"
+
+    - name: "Set current installed version"
+      ansible.builtin.set_fact:
+        adguardhome_current_version: >-
+          {{ (adguardhome_version_output.stdout | regex_search('v([0-9]+\.[0-9]+\.[0-9]+)', '\1') | default([''], true)) | first }}

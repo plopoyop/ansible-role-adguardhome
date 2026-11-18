@@ -1,0 +1,70 @@
+---
+# Install and bin dirs belong to root: root runs the binary (--version,
+# --check-config), so the service account must not be able to replace it.
+# Config and data dirs belong to the service (AdGuard Home writes them and
+# enforces 0700 on its work dir at startup).
+- name: "Ensure installation paths exist"
+  ansible.builtin.file:
+    path: "{{ directory_to_create.path }}"
+    state: "directory"
+    owner: "{{ directory_to_create.owner }}"
+    group: "{{ adguardhome_system_group }}"
+    mode: "{{ directory_to_create.mode }}"
+  loop:
+    - { path: "{{ adguardhome_install_path }}", owner: "root", mode: "0750" }
+    - { path: "{{ adguardhome_bin_path }}", owner: "root", mode: "0750" }
+    - { path: "{{ adguardhome_config_path }}", owner: "{{ adguardhome_system_user }}", mode: "0750" }
+    - { path: "{{ adguardhome_data_path }}", owner: "{{ adguardhome_system_user }}", mode: "0700" }
+  loop_control:
+    loop_var: "directory_to_create"
+    label: "{{ directory_to_create.path }}"
+
+- name: "Install AdGuard Home binary"
+  when: (not adguardhome_exec.stat.exists) or (adguardhome_current_version | default('') != adguardhome_version)
+  block:
+    - name: "Create temporary download directory"
+      ansible.builtin.tempfile:
+        state: "directory"
+        suffix: "adguardhome"
+      register: "adguardhome_tmp"
+      # Needed by the next task even in check mode.
+      check_mode: false
+
+    - name: "Download AdGuard Home archive (checksum verified)"
+      ansible.builtin.get_url:
+        url: "{{ adguardhome_download_url }}"
+        dest: "{{ adguardhome_tmp.path }}/{{ adguardhome_archive_name }}"
+        checksum: "sha256:{{ adguardhome_checksums_url }}"
+        mode: "0600"
+
+    - name: "Extract AdGuard Home binary"
+      ansible.builtin.unarchive:
+        src: "{{ adguardhome_tmp.path }}/{{ adguardhome_archive_name }}"
+        dest: "{{ adguardhome_bin_path }}"
+        remote_src: true
+        include:
+          - "./AdGuardHome/AdGuardHome"
+        extra_opts:
+          - "--strip-components=2"
+        owner: "root"
+        group: "{{ adguardhome_system_group }}"
+        mode: "0750"
+      notify: "Restart AdGuard Home"
+
+  always:
+    - name: "Remove temporary download directory"
+      ansible.builtin.file:
+        path: "{{ adguardhome_tmp.path }}"
+        state: "absent"
+      when: adguardhome_tmp.path is defined
+
+- name: "Create systemd service file"
+  ansible.builtin.template:
+    src: "etc/systemd/system/adguardhome.service.j2"
+    dest: "{{ adguardhome_service_file_path }}"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  notify:
+    - "Reload Systemd"
+    - "Restart AdGuard Home"
