@@ -1,0 +1,10 @@
+---
+- name: "Reload Systemd"
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+
+- name: "Restart AdGuard Home"
+  ansible.builtin.systemd_service:
+    name: "{{ adguardhome_service_name }}"
+    state: "restarted"
+  when: adguardhome_service_state != "stopped"

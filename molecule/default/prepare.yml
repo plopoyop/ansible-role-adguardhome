@@ -1,0 +1,9 @@
+---
+- name: Prepare
+  hosts: all
+  tasks:
+    - name: "Install DNS client used by verify"
+      ansible.builtin.package:
+        name: "{{ 'bind9-dnsutils' if ansible_facts['os_family'] == 'Debian' else 'bind-utils' }}"
+        state: "present"
+        update_cache: true

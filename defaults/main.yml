@@ -1,0 +1,82 @@
+---
+# @var adguardhome_system_user
+# @var adguardhome_system_user:type: string
+# @var adguardhome_system_user:description: >
+# System user running AdGuard Home
+adguardhome_system_user: "adguardhome"
+
+# @var adguardhome_system_group
+# @var adguardhome_system_group:type: string
+# @var adguardhome_system_group:description: >
+# System group running AdGuard Home
+adguardhome_system_group: "adguardhome"
+
+# @var adguardhome_version
+# @var adguardhome_version:type: string
+# @var adguardhome_version:description: >
+# AdGuard Home version to install (without the leading "v")
+adguardhome_version: "0.107.80"
+
+# @var adguardhome_service_state
+# @var adguardhome_service_state:type: string
+# @var adguardhome_service_state:description: >
+# AdGuard Home service state
+adguardhome_service_state: "started"
+
+# @var adguardhome_service_enabled
+# @var adguardhome_service_enabled:type: boolean
+# @var adguardhome_service_enabled:description: >
+# Enable AdGuard Home service on boot
+adguardhome_service_enabled: true
+
+# @var adguardhome_web_address
+# @var adguardhome_web_address:type: string
+# @var adguardhome_web_address:description: >
+# Listen address of the web interface and API (host:port).
+# Bound to localhost by default: expose it through a reverse proxy.
+adguardhome_web_address: "127.0.0.1:3000"
+
+# @var adguardhome_dns_bind_hosts
+# @var adguardhome_dns_bind_hosts:type: list
+# @var adguardhome_dns_bind_hosts:description: >
+# Addresses the DNS server listens on
+adguardhome_dns_bind_hosts:
+  - "0.0.0.0"
+
+# @var adguardhome_dns_port
+# @var adguardhome_dns_port:type: number
+# @var adguardhome_dns_port:description: >
+# DNS server port
+adguardhome_dns_port: 53
+
+# @var adguardhome_users
+# @var adguardhome_users:type: list
+# @var adguardhome_users:description: >
+# Web interface accounts. `password` must be a bcrypt hash
+# (`htpasswd -nbBC 10 "" 'secret' | cut -d: -f2`). An empty list disables
+# authentication: only acceptable while the web interface is bound to localhost.
+adguardhome_users: []
+
+# @var adguardhome_config
+# @var adguardhome_config:type: dict
+# @var adguardhome_config:description: >
+# Any AdGuardHome.yaml setting. Recursively merged over the role defaults
+# (schema version 34); lists replace the default lists.
+# @var adguardhome_config:example: >
+# adguardhome_config:
+#   dns:
+#     upstream_dns:
+#       - "https://dns.quad9.net/dns-query"
+#   filtering:
+#     rewrites:
+#       - domain: "nas.home.arpa"
+#         answer: "192.0.2.10"
+#         enabled: true
+adguardhome_config: {}
+
+# @var adguardhome_disable_resolved_stub
+# @var adguardhome_disable_resolved_stub:type: boolean
+# @var adguardhome_disable_resolved_stub:description: >
+# When systemd-resolved is running, disable its stub listener on port 53 and
+# point /etc/resolv.conf to the resolved upstream servers
+adguardhome_disable_resolved_stub: true

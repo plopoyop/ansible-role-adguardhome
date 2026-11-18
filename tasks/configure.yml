@@ -1,0 +1,90 @@
+---
+- name: "Free port 53 from systemd-resolved"
+  when: adguardhome_disable_resolved_stub
+  block:
+    - name: "Gather services state"
+      ansible.builtin.service_facts:
+
+    - name: "Disable systemd-resolved stub listener"
+      # Also when stopped but enabled: it would take port 53 back at boot.
+      when: >-
+        ansible_facts['services']['systemd-resolved.service']['state'] | default('') == "running"
+        or ansible_facts['services']['systemd-resolved.service']['status'] | default('') == "enabled"
+      block:
+        - name: "Ensure resolved drop-in directory exists"
+          ansible.builtin.file:
+            path: "{{ adguardhome_resolved_dropin_path | dirname }}"
+            state: "directory"
+            owner: "root"
+            group: "root"
+            mode: "0755"
+
+        - name: "Create resolved drop-in"
+          ansible.builtin.template:
+            src: "etc/systemd/resolved.conf.d/adguardhome.conf.j2"
+            dest: "{{ adguardhome_resolved_dropin_path }}"
+            owner: "root"
+            group: "root"
+            mode: "0644"
+          register: "adguardhome_resolved_dropin"
+
+        - name: "Point /etc/resolv.conf to resolved upstream servers"
+          ansible.builtin.file:
+            src: "/run/systemd/resolve/resolv.conf"
+            dest: "/etc/resolv.conf"
+            state: "link"
+            force: true
+
+        # Restarted now (not in a handler): port 53 must be free before
+        # AdGuard Home starts below.
+        - name: "Restart systemd-resolved"
+          ansible.builtin.systemd_service:
+            name: "systemd-resolved"
+            state: "restarted"
+          when: adguardhome_resolved_dropin is changed  # noqa: no-handler
+
+- name: "Read current configuration"
+  ansible.builtin.slurp:
+    src: "{{ adguardhome_config_file_path }}"
+  register: "adguardhome_current_config"
+  failed_when: false
+
+# Compare parsed content, not text: AdGuard Home may rewrite the file with
+# another layout without changing any value.
+# AdGuard Home enforces 0600 on its configuration file at startup.
+- name: "Write configuration"
+  ansible.builtin.template:
+    src: "opt/adguardhome/etc/AdGuardHome.yaml.j2"
+    dest: "{{ adguardhome_config_file_path }}"
+    owner: "{{ adguardhome_system_user }}"
+    group: "{{ adguardhome_system_group }}"
+    mode: "0600"
+    validate: "{{ adguardhome_executable_path }} --check-config --config %s --work-dir {{ adguardhome_data_path }}"
+  # The rendered file holds password hashes and possibly TLS keys.
+  diff: false
+  when: >-
+    adguardhome_current_config.content is not defined
+    or (adguardhome_current_config.content | b64decode | from_yaml) != adguardhome_config_final
+  notify: "Restart AdGuard Home"
+
+- name: "Ensure configuration file permissions"
+  ansible.builtin.file:
+    path: "{{ adguardhome_config_file_path }}"
+    owner: "{{ adguardhome_system_user }}"
+    group: "{{ adguardhome_system_group }}"
+    mode: "0600"
+  when: not ansible_check_mode or adguardhome_current_config.content is defined
+
+# Apply binary/config changes now: a failure later in the play must not leave
+# the old version or configuration running (nothing would restart it on the
+# next run, as files would already be up to date).
+- name: "Apply pending restarts"
+  ansible.builtin.meta: "flush_handlers"
+
+- name: "Ensure service is in correct state"
+  ansible.builtin.systemd_service:
+    name: "{{ adguardhome_service_name }}"
+    state: "{{ adguardhome_service_state }}"
+    enabled: "{{ adguardhome_service_enabled }}"
+    daemon_reload: true
+  when: not ansible_check_mode
