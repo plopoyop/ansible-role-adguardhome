@@ -6,6 +6,7 @@
 
 ## ⚙️ Dependencies
 
+- feat\(deps\)!: Update AdguardTeam/AdGuardHome \(v0.107.80 → v1.0.0\) [\#4](https://github.com/plopoyop/ansible-role-adguardhome/pull/4) ([plopoyop](https://github.com/plopoyop))
 - fix\(ci\): update renovatebot/github-action action \(v46.3.13 → v46.3.14\) [\#2](https://github.com/plopoyop/ansible-role-adguardhome/pull/2) ([plopoyop](https://github.com/plopoyop))
 
 ## [0.1.0](https://github.com/plopoyop/ansible-role-adguardhome/tree/0.1.0) (2026-11-18)
