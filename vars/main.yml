@@ -34,7 +34,7 @@ adguardhome_config_final: >-
      | combine(adguardhome_config_role_managed, recursive=true, list_merge='replace')
      | combine(adguardhome_config, recursive=true, list_merge='replace') }}
 
-# AdGuardHome.yaml as written by AdGuard Home v0.107.80 (schema 34) after the
+# AdGuardHome.yaml as written by AdGuard Home v1.0.0 (schema 35) after the
 # setup wizard, in the same key order, so that AdGuard Home does not rewrite it.
 #
 # When adguardhome_version changes (Renovate PR): run the new release once in a
@@ -235,4 +235,4 @@ adguardhome_config_defaults:
     group: ""
     user: ""
     rlimit_nofile: 0
-  schema_version: 34
+  schema_version: 35
