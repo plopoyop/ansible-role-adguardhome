@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.1](https://github.com/plopoyop/ansible-role-adguardhome/tree/0.1.1) (2026-11-22)
+
+[Full Changelog](https://github.com/plopoyop/ansible-role-adguardhome/compare/0.1.0...0.1.1)
+
+## ⚙️ Dependencies
+
+- fix\(ci\): update renovatebot/github-action action \(v46.3.13 → v46.3.14\) [\#2](https://github.com/plopoyop/ansible-role-adguardhome/pull/2) ([plopoyop](https://github.com/plopoyop))
+
 ## [0.1.0](https://github.com/plopoyop/ansible-role-adguardhome/tree/0.1.0) (2026-11-18)
 
 [Full Changelog](https://github.com/plopoyop/ansible-role-adguardhome/compare/f90e432c0f8630c5cd8f8b6abee6ea333fb3730b...0.1.0)
