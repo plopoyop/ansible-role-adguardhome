@@ -32,7 +32,7 @@ Install & configure AdGuard Home DNS server
 ### adguardhome_config
 
 Any AdGuardHome.yaml setting. Recursively merged over the role defaults
-(schema version 34); lists replace the default lists.
+(schema version 35); lists replace the default lists.
 
 **_Type:_** dict<br />
 
@@ -165,7 +165,7 @@ AdGuard Home version to install (without the leading "v")
 #### Default value
 
 ```YAML
-adguardhome_version: 0.107.80
+adguardhome_version: 1.0.0
 ```
 
 ### adguardhome_web_address

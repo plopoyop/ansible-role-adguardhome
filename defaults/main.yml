@@ -15,7 +15,7 @@ adguardhome_system_group: "adguardhome"
 # @var adguardhome_version:type: string
 # @var adguardhome_version:description: >
 # AdGuard Home version to install (without the leading "v")
-adguardhome_version: "0.107.80"
+adguardhome_version: 1.0.0
 
 # @var adguardhome_service_state
 # @var adguardhome_service_state:type: string
@@ -61,7 +61,7 @@ adguardhome_users: []
 # @var adguardhome_config:type: dict
 # @var adguardhome_config:description: >
 # Any AdGuardHome.yaml setting. Recursively merged over the role defaults
-# (schema version 34); lists replace the default lists.
+# (schema version 35); lists replace the default lists.
 # @var adguardhome_config:example: >
 # adguardhome_config:
 #   dns:
