@@ -15,7 +15,7 @@ adguardhome_system_group: "adguardhome"
 # @var adguardhome_version:type: string
 # @var adguardhome_version:description: >
 # AdGuard Home version to install (without the leading "v")
-adguardhome_version: "0.107.80"
+adguardhome_version: 1.0.0
 
 # @var adguardhome_service_state
 # @var adguardhome_service_state:type: string

@@ -165,7 +165,7 @@ AdGuard Home version to install (without the leading "v")
 #### Default value
 
 ```YAML
-adguardhome_version: 0.107.80
+adguardhome_version: 1.0.0
 ```
 
 ### adguardhome_web_address
