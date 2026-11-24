@@ -1,5 +1,16 @@
 # plopoyop.adguardhome
 
+> [!WARNING]
+> **This role is deprecated and this repository is archived.** It now lives in the
+> [`plopoyop.personal_network_gateway`](https://github.com/plopoyop/ansible-collection-personal_network_gateway)
+> collection as `plopoyop.personal_network_gateway.adguardhome`, with the same variables:
+>
+> ```shell
+> ansible-galaxy collection install plopoyop.personal_network_gateway
+> ```
+>
+> Then replace `plopoyop.adguardhome` with `plopoyop.personal_network_gateway.adguardhome` in your playbooks.
+
 Install & configure AdGuard Home DNS server
 
 ## Table of contents
